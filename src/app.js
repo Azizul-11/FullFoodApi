@@ -2,17 +2,15 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const env = require("dotenv");
-const port = 3200;
+const port = process.env.PORT || 3200; // Use the port provided by Netlify or default to 3200
 
 env.config();
 
 app.use(express.json());
 app.use(cors());
-
-// Move the database connection setup to the top
-require("./db/conn");
-
 const food = require("./model/foodinfo");
+
+require("./db/conn");
 
 app.get("/", async (req, res) => {
   try {
