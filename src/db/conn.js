@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
 
-mongoose.connect(process.env.MONGO_URL, {
+const MONGO_URL =
+  "mongodb+srv://mdazizul1:mdazizul1@apifood.q1yvwkk.mongodb.net/APIFOOD?useNewUrlParser=true&useUnifiedTopology=true";
+
+mongoose.connect(MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  // Remove useCreateIndex from the options
 });
 
 const db = mongoose.connection;
