@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Food Api</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <h1 style="display: flex; justify-content: center; align-items: center">
+      Food Data
+    </h1>
+    <table id="foodTable" border="1">
+      <thead>
+        <tr>
+          <th>Food-Item-Name</th>
+          <th>Food-group</th>
+          <th>Description</th>
+          <th>Ingredients</th>
+          <th>Serving-Size</th>
+          <th>Certifications</th>
+          <th>Health-Benefits</th>
+          <th>Country-Of-Origin</th>
+          <th>Preparation-Methods</th>
+          <th>Dietary-Restrictions</th>
+          <th>Brand-Or-Manufacturer</th>
+          <th>Nutritional-Information</th>
+          <th>allergens</th>
+        </tr>
+      </thead>
+      <tbody id="tablebody"></tbody>
+    </table>
+    <script>
+      fetch("http://localhost:3200/")
+        .then((res) => res.json())
+        .then((data) => {
+          const tablebody = document.getElementById("tablebody");
+          tablebody.innerHTML = "";
+
+          data.forEach((food) => {
+            const row = document.createElement("tr");
+            row.dataset.food_item_name = food.food_item_name;
+            row.innerHTML = `
+              <td contenteditable="false">${food.food_item_name}</td>
+              <td contenteditable="false">${food.food_group}</td>
+              <td contenteditable="false">${food.description}</td>
+              <td contenteditable="false">${food.ingredients.join(", ")}</td>
+              <td contenteditable="false">${food.serving_size}</td>
+              <td contenteditable="false">${food.certifications.join(", ")}</td>
+              <td contenteditable="false">${food.health_benefits.join(
+                ", "
+              )}</td>
+              <td contenteditable="false">${food.country_of_origin}</td>
+              <td contenteditable="false">${food.preparation_methods.join(
+                ", "
+              )}</td>
+              <td contenteditable="false">${food.dietary_restrictions.join(
+                ", "
+              )}</td>
+              <td contenteditable="false">${food.brand_or_manufacturer}</td>
+              <td contenteditable="false">
+                Fat: ${food.nutritional_information.fat},<br/>
+                Fiber: ${food.nutritional_information.fiber}, <br/>
+                Protein: ${food.nutritional_information.protein}, <br/>
+                Calories: ${food.nutritional_information.calories}, <br/>
+                Carbohydrates: ${food.nutritional_information.carbohydrates}
+              </td>
+              <td>${food.allergens.join(", ")}</td>
+              <td>
+                <button style="margin:15px"  onclick="editRow('${
+                  food.food_item_name
+                }')">Edit</button>
+                
+                <button style="margin:15px" onclick="deleteRow('${
+                  food.food_item_name
+                }')">Delete</button>
+                
+                <button style="display:none;margin:15px" onclick="saveRow('${
+                  food.food_item_name
+                }')">Save</button>
+              </td>
+            `;
+            tablebody.appendChild(row);
+          });
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+
+      const deleteRow = async (food_item_name) => {
+        try {
+          await fetch(`http://localhost:3200/foods/${food_item_name}`, {
+            method: "DELETE",
+          });
+          location.reload();
+        } catch (error) {
+          console.log(error);
+        }
+      };
+
+      const editRow = async (food_item_name) => {
+        const row = document.querySelector(
+          `tr[data-food_item_name="${food_item_name}"]`
+        );
+        const editButtons = row.querySelectorAll("button");
+
+        row.querySelectorAll("td[contenteditable]").forEach((cell) => {
+          cell.contentEditable = true;
+        });
+
+        editButtons[0].style.display = "none";
+        editButtons[2].style.display = "inline-block";
+      };
+
+      const saveRow = async (food_item_name) => {
+        const row = document.querySelector(
+          `tr[data-food_item_name="${food_item_name}"]`
+        );
+        const editButtons = row.querySelectorAll("button");
+
+        row.querySelectorAll("td[contenteditable]").forEach((cell) => {
+          cell.contentEditable = false;
+        });
+
+        editButtons[0].style.display = "inline-block";
+        editButtons[2].style.display = "none";
+
+        const updatedData = {
+          food_item_name: row.cells[0].textContent,
+          food_group: row.cells[1].textContent,
+          description: row.cells[2].textContent,
+          ingredients: row.cells[3].textContent.split(", "),
+          serving_size: row.cells[4].textContent,
+          certifications: row.cells[5].textContent.split(", "),
+          health_benefits: row.cells[6].textContent.split(", "),
+          country_of_origin: row.cells[7].textContent,
+          preparation_methods: row.cells[8].textContent.split(", "),
+          dietary_restrictions: row.cells[9].textContent.split(", "),
+          brand_or_manufacturer: row.cells[10].textContent,
+          nutritional_information: {
+            fat: parseFloat(row.cells[11].textContent.match(/Fat: (.*?),/)[1]),
+            fiber: parseFloat(
+              row.cells[11].textContent.match(/Fiber: (.*?),/)[1]
+            ),
+            protein: parseFloat(
+              row.cells[11].textContent.match(/Protein: (.*?),/)[1]
+            ),
+            calories: parseFloat(
+              row.cells[11].textContent.match(/Calories: (.*?),/)[1]
+            ),
+            carbohydrates: parseFloat(
+              row.cells[11].textContent.match(/Carbohydrates: (.*)/)[1]
+            ),
+          },
+          allergens: row.cells[12].textContent.split(", "),
+        };
+
+        try {
+          const response = await fetch(
+            `http://localhost:3200/foods/${food_item_name}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(updatedData),
+            }
+          );
+          const data = await response.json();
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    </script>
+  </body>
+</html>
